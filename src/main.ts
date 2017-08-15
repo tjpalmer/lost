@@ -1,5 +1,7 @@
+import {Game} from './all';
+
 addEventListener('load', init);
 
 function init() {
-  console.log('Hi!');
+  new Game();
 }
