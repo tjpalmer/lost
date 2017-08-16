@@ -5,8 +5,15 @@ export class Game {
     window.addEventListener('resize', this.resize);
     this.resize();
     let gl = this.gl = this.canvas.getContext('webgl')!;
+    // Program.
     let program = gl.createProgram()!;
-    gl.attachShader(program, this.loadShader(vertex, gl.VERTEX_SHADER));
+    gl.attachShader(program, this.loadShader(vertexSource, gl.VERTEX_SHADER));
+    gl.attachShader(
+      program, this.loadShader(fragmentSource, gl.FRAGMENT_SHADER)
+    );
+    gl.linkProgram(program);
+    gl.useProgram(program);
+    // Buffers.
   }
 
   canvas: HTMLCanvasElement;
@@ -29,7 +36,13 @@ export class Game {
 
 }
 
-let vertex = `
+let fragmentSource = `
+  void main(void) {
+    gl_FragColor = vec4(0.9, 0.6, 0.3, 1.0);
+  }
+`;
+
+let vertexSource = `
   attribute vec3 position;
   void main(void) {
     gl_Position = vec4(position, 1.0);
