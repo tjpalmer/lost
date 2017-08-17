@@ -2,8 +2,6 @@ export class Game {
   
   constructor() {
     this.canvas = document.getElementsByTagName('canvas')[0];
-    window.addEventListener('resize', this.resize);
-    this.resize();
     let gl = this.gl = this.canvas.getContext('webgl')!;
     // Program.
     let program = gl.createProgram()!;
@@ -13,10 +11,35 @@ export class Game {
     );
     gl.linkProgram(program);
     gl.useProgram(program);
+    this.positionAttrib = gl.getAttribLocation(program, 'position');
+    // Settings.
+    gl.clearColor(0, 0, 0, 1);
     // Buffers.
+    let buffer = this.buffer = gl.createBuffer()!; 
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    let vertices = [
+      0, 0, 0,
+      200, 200, 0,
+      0, 200, 0,
+    ];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    // Resize after drawing things are in place.
+    window.addEventListener('resize', this.resize);
+    this.resize();
   }
 
+  buffer: WebGLBuffer;
+
   canvas: HTMLCanvasElement;
+
+  draw() {
+    let {canvas, buffer, gl, positionAttrib} = this;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
 
   gl: WebGLRenderingContext;
 
@@ -28,10 +51,13 @@ export class Game {
     return shader!;
   }
 
+  positionAttrib: number;
+
   resize = () => {
     let {canvas} = this;
     canvas.height = innerHeight;
     canvas.width = innerWidth;
+    this.draw();
   }
 
 }
