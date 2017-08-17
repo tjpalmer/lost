@@ -12,15 +12,16 @@ export class Game {
     gl.linkProgram(program);
     gl.useProgram(program);
     this.positionAttrib = gl.getAttribLocation(program, 'position');
+    gl.enableVertexAttribArray(this.positionAttrib);
     // Settings.
     gl.clearColor(0, 0, 0, 1);
     // Buffers.
     let buffer = this.buffer = gl.createBuffer()!; 
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     let vertices = [
-      0, 0, 0,
-      200, 200, 0,
-      0, 200, 0,
+      -0.5, -0.5, 0,
+      0, 0.5, 0,
+      0.5, -0.5, 0,
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
     // Resize after drawing things are in place.
