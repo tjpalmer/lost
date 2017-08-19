@@ -84,7 +84,7 @@ let fragmentSource = `
   precision mediump float;
   varying vec3 vNormal;
   void main(void) {
-    vec3 rgb = vec3(0.9, 0.6, 0.3);
+    vec3 rgb = vec3(0.1, 0.6, 0.4);
     vec3 light = normalize(vec3(-1.0, 1.0, 1.0));
     float scale = 0.5 * (dot(vNormal, light) + 1.0);
     scale = 0.8 * scale + 0.2;
@@ -99,7 +99,8 @@ let vertexSource = `
   attribute vec3 position;
   varying vec3 vNormal;
   void main(void) {
-    gl_Position = view * vec4(position, 1.0);
+    gl_Position = vec4(vec3(0.08), 1.0) * view * vec4(position, 1.0);
+    gl_Position = gl_Position * vec4(0.8, 1.0, 1.0, 1.0);
     vNormal = normalize(position);
   }
 `;
