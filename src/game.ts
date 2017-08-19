@@ -90,6 +90,7 @@ let fragmentSource = `
     scale = 0.8 * scale + 0.2;
     rgb = rgb * scale;
     gl_FragColor = vec4(rgb, 1.0);
+    // gl_FragColor.xyz = vNormal;
   }
 `;
 

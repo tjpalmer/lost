@@ -5,8 +5,7 @@ export function makeArc(
   let {PI, cos, sin} = Math;
   let lons = linspace(lon0 * PI, lon1 * PI, lonSteps);
   let lats = linspace(lat0 * PI, lat1 * PI, latSteps);
-  let width = lons.length;
-  let positions = new Float32Array(3 * 2 * lonSteps * latSteps);
+  let positions = new Float32Array(3 * 3 * 2 * lonSteps * latSteps);
   let posOffset = 0;
   function addXyz(j: number, i: number) {
     let lon = lons[j];
@@ -21,12 +20,12 @@ export function makeArc(
   }
   for (let j = 0; j < lonSteps; ++j) {
     for (let i = 0; i < latSteps; ++i) {
-      addXyz(i, j);
-      addXyz(i + 1, j);
-      addXyz(i + 1, j + 1);
-      addXyz(i, j);
-      addXyz(i + 1, j + 1);
-      addXyz(i, j + 1);
+      addXyz(j, i);
+      addXyz(j + 1, i);
+      addXyz(j + 1, i + 1);
+      addXyz(j, i);
+      addXyz(j + 1, i + 1);
+      addXyz(j, i + 1);
     }
   }
   return positions;
