@@ -39,7 +39,7 @@ export class Game {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.uniformMatrix4fv(viewUniform, false, view);
-    gl.drawArrays(gl.TRIANGLES, 0, this.world.shellPositions.length / 6);
+    gl.drawArrays(gl.TRIANGLES, 0, this.world.shellPositions.length / 3);
   }
 
   gl: WebGLRenderingContext;
@@ -84,9 +84,12 @@ let fragmentSource = `
   precision mediump float;
   varying vec3 vNormal;
   void main(void) {
-    gl_FragColor = vec4(0.9, 0.6, 0.3, 1.0);
-    vec3 light = normalize(vec3(1.0, 0.0, 0.0));
-    gl_FragColor.xyz = gl_FragColor.xyz * dot(vNormal, light);
+    vec3 rgb = vec3(0.9, 0.6, 0.3);
+    vec3 light = normalize(vec3(-1.0, 1.0, 1.0));
+    float scale = 0.5 * (dot(vNormal, light) + 1.0);
+    scale = 0.8 * scale + 0.2;
+    rgb = rgb * scale;
+    gl_FragColor = vec4(rgb, 1.0);
   }
 `;
 
