@@ -1,9 +1,11 @@
-import {linspace} from './all';
+import {makeArc} from './all';
 
 export class World {
 
   constructor() {
-    console.log(linspace(0, 20, 10));
+    this.shellPositions = makeArc(-0.5, 0.5, 20, -0.5, 0.5, 20);
   }
+
+  shellPositions: Float32Array;
 
 }
