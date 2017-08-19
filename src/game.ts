@@ -1,3 +1,5 @@
+import {World} from './all';
+
 export class Game {
   
   constructor() {
@@ -16,6 +18,7 @@ export class Game {
     // Settings.
     gl.clearColor(0, 0, 0, 1);
     // Buffers.
+    new World();
     let buffer = this.buffer = gl.createBuffer()!; 
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     let vertices = [
