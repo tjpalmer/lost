@@ -1,8 +1,9 @@
 export function makeArc(
-  lon0: number, lon1: number, lonSteps: number,
-  lat0: number, lat1: number, latSteps: number,
+  steps: number, lon0: number, lon1: number, lat0: number, lat1: number,
 ) {
-  let {PI, cos, sin} = Math;
+  let {PI, abs, ceil, cos, sin} = Math;
+  steps = ceil(steps * abs(lon1 - lon0) / 2);
+  let lonSteps = steps, latSteps = steps;
   let lons = linspace(lon0 * PI, lon1 * PI, lonSteps);
   let lats = linspace(lat0 * PI, lat1 * PI, latSteps);
   let positions = new Float32Array(3 * 3 * 2 * lonSteps * latSteps);
