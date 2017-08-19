@@ -16,31 +16,15 @@ export class Game {
     gl.useProgram(program);
     this.positionAttrib = gl.getAttribLocation(program, 'position');
     gl.enableVertexAttribArray(this.positionAttrib);
+    this.viewUniform = gl.getUniformLocation(program, 'view')!;
     // Settings.
     gl.clearColor(0, 0, 0, 1);
+    gl.enable(gl.DEPTH_TEST);
     // Buffers.
     // Position.
     let positionBuffer = this.positionBuffer = gl.createBuffer()!; 
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.world.shellPositions, gl.STATIC_DRAW);
-    // let positions = [
-    //   -0.5, -0.5, 0,
-    //   -0.5, 0, 0,
-    //   0, -0.5, 0,
-    //   0, 0, 0,
-    //   0, 0.5, 0,
-    //   0.5, -0.5, 0,
-    // ];
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    // Index.
-    // let indexBuffer = this.indexBuffer = gl.createBuffer()!;
-    // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    // let indices = [
-    //   0, 1, 2, 0xFFFF, 3, 4, 5,
-    // ];
-    // gl.bufferData(
-    //   gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW
-    // );
     // Resize after drawing things are in place.
     window.addEventListener('resize', this.resize);
     this.resize();
@@ -49,27 +33,24 @@ export class Game {
   canvas: HTMLCanvasElement;
 
   draw() {
-    let {canvas, gl, /*indexBuffer,*/ positionAttrib, positionBuffer} = this;
+    let {canvas, gl, positionAttrib, positionBuffer, view, viewUniform} = this;
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
+    gl.uniformMatrix4fv(viewUniform, false, view);
     gl.drawArrays(gl.TRIANGLES, 0, this.world.shellPositions.length / 6);
-    // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    // gl.drawElements(gl.TRIANGLE_STRIP, 7, gl.UNSIGNED_SHORT, 0);
   }
 
   gl: WebGLRenderingContext;
-
-  // indexBuffer: WebGLBuffer;
 
   loadShader(source: string, type: number) {
     let {gl} = this;
     let shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-    console.log(source);
-    console.log(gl.getShaderInfoLog(shader));
+    // console.log(source);
+    // console.log(gl.getShaderInfoLog(shader));
     return shader!;
   }
 
@@ -78,11 +59,22 @@ export class Game {
   positionBuffer: WebGLBuffer;
 
   resize = () => {
-    let {canvas} = this;
-    canvas.height = innerHeight;
-    canvas.width = innerWidth;
+    let {canvas, view} = this;
+    let [height, width] = [innerHeight, innerWidth];
+    canvas.height = height;
+    canvas.width = width;
+    view[0] = height / width;
     this.draw();
   }
+
+  view = new Float32Array([
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  ]);
+
+  viewUniform: WebGLUniformLocation;
 
   world = new World();
 
@@ -95,16 +87,15 @@ let fragmentSource = `
     gl_FragColor = vec4(0.9, 0.6, 0.3, 1.0);
     vec3 light = normalize(vec3(1.0, 0.0, 0.0));
     gl_FragColor.xyz = gl_FragColor.xyz * dot(vNormal, light);
-    // gl_FragColor.xyz = vNormal;
-    // gl_FragColor.xyz = vec3(dot(vNormal, light));
   }
 `;
 
 let vertexSource = `
+  uniform mat4 view;
   attribute vec3 position;
   varying vec3 vNormal;
   void main(void) {
-    gl_Position = vec4(position, 1.0);
+    gl_Position = view * vec4(position, 1.0);
     vNormal = normalize(position);
   }
 `;
