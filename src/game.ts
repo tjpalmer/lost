@@ -3,6 +3,14 @@ import {World} from './all';
 export class Game {
 
   constructor() {
+    // Mouse.
+    let cursor = document.getElementsByTagName('svg')[0];
+    addEventListener('mousemove', event => {
+      let {style} = cursor;
+      style.left = `${event.clientX - cursor.clientWidth / 2}px`;
+      style.top = `${event.clientY - cursor.clientHeight / 2}px`;
+    });
+    // Canvas.
     this.canvas = document.getElementsByTagName('canvas')[0];
     let gl = this.gl =
       this.canvas.getContext('webgl2') as WebGLRenderingContext;
@@ -34,7 +42,7 @@ export class Game {
       gl.ARRAY_BUFFER, new Float32Array([0, 0, 3, 3]), gl.STATIC_DRAW,
     );
     // Resize after drawing things are in place.
-    window.addEventListener('resize', this.resize);
+    addEventListener('resize', this.resize);
     this.resize();
   }
 
