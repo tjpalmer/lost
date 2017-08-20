@@ -1,7 +1,7 @@
 import {World} from './all';
 
 export class Game {
-  
+
   constructor() {
     this.canvas = document.getElementsByTagName('canvas')[0];
     let gl = this.gl =
@@ -16,6 +16,8 @@ export class Game {
     gl.useProgram(program);
     this.positionAttrib = gl.getAttribLocation(program, 'position');
     gl.enableVertexAttribArray(this.positionAttrib);
+    this.transformAttrib = gl.getAttribLocation(program, 'transform');
+    gl.enableVertexAttribArray(this.transformAttrib);
     this.viewUniform = gl.getUniformLocation(program, 'view')!;
     // Settings.
     gl.clearColor(0, 0, 0, 1);
@@ -25,6 +27,12 @@ export class Game {
     let positionBuffer = this.positionBuffer = gl.createBuffer()!; 
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.world.shellPositions, gl.STATIC_DRAW);
+    // Transform.
+    let transformBuffer = this.transformBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER, new Float32Array([0, 0, 3, 3]), gl.STATIC_DRAW,
+    );
     // Resize after drawing things are in place.
     window.addEventListener('resize', this.resize);
     this.resize();
@@ -33,13 +41,21 @@ export class Game {
   canvas: HTMLCanvasElement;
 
   draw() {
-    let {canvas, gl, positionAttrib, positionBuffer, view, viewUniform} = this;
+    let {
+      canvas, gl, positionAttrib, positionBuffer, transformAttrib,
+      transformBuffer, view, viewUniform,
+    } = this;
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
+    gl.vertexAttribPointer(transformAttrib, 2, gl.FLOAT, false, 0, 0);
+    (gl as any).vertexAttribDivisor(transformAttrib, 1);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.uniformMatrix4fv(viewUniform, false, view);
-    gl.drawArrays(gl.TRIANGLES, 0, this.world.shellPositions.length / 3);
+    (gl as any).drawArraysInstanced(
+      gl.TRIANGLES, 0, this.world.shellPositions.length / 3, 2,
+    );
   }
 
   gl: WebGLRenderingContext;
@@ -66,6 +82,10 @@ export class Game {
     view[0] = height / width;
     this.draw();
   }
+
+  transformAttrib: number;
+
+  transformBuffer: WebGLBuffer;
 
   view = new Float32Array([
     1, 0, 0, 0,
@@ -97,9 +117,12 @@ let fragmentSource = `
 let vertexSource = `
   uniform mat4 view;
   attribute vec3 position;
+  attribute vec2 transform;
   varying vec3 vNormal;
   void main(void) {
-    gl_Position = vec4(vec3(0.08), 1.0) * view * vec4(position, 1.0);
+    vec3 pos = position;
+    pos.xy = pos.xy + transform;
+    gl_Position = vec4(vec3(0.08), 1.0) * view * vec4(pos, 1.0);
     gl_Position = gl_Position * vec4(0.8, 1.0, 1.0, 1.0);
     vNormal = normalize(position);
   }
