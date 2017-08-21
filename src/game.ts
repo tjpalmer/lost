@@ -48,8 +48,8 @@ export class Game {
       style.top = `${y - cursor.clientHeight / 2}px`;
       let [height, width] = [innerHeight, innerWidth];
       x = (2 * (x / width) - 1) / view[0];
-      let z = (-2 * (y / height) + 1) / view[10];
-      cursorPosition.set([x, 1.0, z]);
+      y = (-2 * (y / height) + 1) / view[10];
+      cursorPosition.set([x, y, 1.0]);
       this.draw();
     });
   }
@@ -134,7 +134,8 @@ let fragmentSource = `
     float scale = 0.5 * (dot(vNormal, light) + 1.0);
     scale = 0.8 * scale + 0.2;
     rgb = rgb * scale;
-    scale = 0.1 * (dot(vNormal, vCursorDiff) + 1.0);
+    scale = 0.5 * (dot(vNormal, normalize(vCursorDiff)) + 1.0);
+    scale = scale / pow(length(vCursorDiff), 0.1);
     rgb.x = rgb.x + scale;
     gl_FragColor = vec4(rgb, 1.0);
     // gl_FragColor.xyz = vCursorDiff;
