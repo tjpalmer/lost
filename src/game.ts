@@ -17,8 +17,11 @@ export class Game {
     gl.useProgram(program);
     this.positionAttrib = gl.getAttribLocation(program, 'position');
     gl.enableVertexAttribArray(this.positionAttrib);
-    this.transformAttrib = gl.getAttribLocation(program, 'transform');
-    gl.enableVertexAttribArray(this.transformAttrib);
+    for (let i = 0; i < 4; ++i) {
+      let transformAttrib = this.transformAttribs[i] =
+        gl.getAttribLocation(program, `transform${i}`);
+      gl.enableVertexAttribArray(transformAttrib);
+    }
     this.cursorUniform = gl.getUniformLocation(program, 'cursor')!;
     this.viewUniform = gl.getUniformLocation(program, 'view')!;
     // Settings.
@@ -63,19 +66,17 @@ export class Game {
   draw() {
     let {
       canvas, cursorPosition, cursorUniform, gl, positionAttrib, positionBuffer,
-      transformAttrib, transformBuffer, view, viewUniform, world,
+      transformAttribs, transformBuffer, view, viewUniform, world,
     } = this;
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
-    // console.log(world.makeTransforms());
-    gl.vertexAttribPointer(transformAttrib, 2, gl.FLOAT, false, 64, 48);
-    (gl as any).vertexAttribDivisor(transformAttrib, 1);
-    // for (let i = 0; i < 4; ++i) {
-    //   gl.enableVertexAttribArray(this.transformAttrib + i);
-    //   gl.vertexAttribPointer(transformAttrib + i, 4, gl.FLOAT, false, 64, 0);
-    //   (gl as any).vertexAttribDivisor(transformAttrib + i, 1);
-    // }
+    for (let i = 0; i < 4; ++i) {
+      gl.vertexAttribPointer(
+        transformAttribs[i], 4, gl.FLOAT, false, 64, 16 * i
+      );
+      (gl as any).vertexAttribDivisor(transformAttribs[i], 1);
+    }
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.uniform3fv(cursorUniform, cursorPosition);
@@ -113,7 +114,7 @@ export class Game {
 
   scale = 0.05;
 
-  transformAttrib: number;
+  transformAttribs = [] as Array<number>;
 
   transformBuffer: WebGLBuffer;
 
@@ -152,16 +153,14 @@ let vertexSource = `
   uniform vec3 cursor;
   uniform mat4 view;
   attribute vec3 position;
-  attribute vec2 transform;
+  attribute vec4 transform0, transform1, transform2, transform3;
+  // attribute mat4 transform;
   varying vec3 vCursorDiff;
   varying vec3 vNormal;
   void main(void) {
     vec4 pos = vec4(position, 1.0);
-    // pos = transform * pos;
-    // pos = vec4(position, 1.0);
-    pos.xy = pos.xy + transform;
-    // pos.x = pos.x + transform[3].x;
-    // pos.y = pos.y + transform[0].y;
+    mat4 transform = mat4(transform0, transform1, transform2, transform3);
+    pos = transform * pos;
     vCursorDiff = cursor - pos.xyz;
     gl_Position = view * pos;
     // gl_Position = gl_Position * vec4(0.8, 1.0, 1.0, 1.0);
