@@ -18,6 +18,7 @@ export class Game {
     this.positionAttrib = gl.getAttribLocation(program, 'position');
     gl.enableVertexAttribArray(this.positionAttrib);
     this.transformAttrib = gl.getAttribLocation(program, 'transform');
+    gl.enableVertexAttribArray(this.transformAttrib);
     this.cursorUniform = gl.getUniformLocation(program, 'cursor')!;
     this.viewUniform = gl.getUniformLocation(program, 'view')!;
     // Settings.
@@ -30,6 +31,10 @@ export class Game {
     gl.bufferData(gl.ARRAY_BUFFER, this.world.shellPositions, gl.STATIC_DRAW);
     // Transform.
     let transformBuffer = this.transformBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER, this.world.makeTransforms(), gl.STATIC_DRAW,
+    );
     // Resize after drawing things are in place.
     addEventListener('resize', this.resize);
     this.resize();
@@ -63,15 +68,14 @@ export class Game {
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
-    gl.bufferData(
-      gl.ARRAY_BUFFER, world.makeTransforms(), gl.STATIC_DRAW,
-    );
     // console.log(world.makeTransforms());
-    for (let i = 0; i < 4; ++i) {
-      gl.enableVertexAttribArray(this.transformAttrib + i);
-      gl.vertexAttribPointer(transformAttrib + i, 4, gl.FLOAT, false, 64, 0);
-      (gl as any).vertexAttribDivisor(transformAttrib + i, 1);
-    }
+    gl.vertexAttribPointer(transformAttrib, 2, gl.FLOAT, false, 64, 48);
+    (gl as any).vertexAttribDivisor(transformAttrib, 1);
+    // for (let i = 0; i < 4; ++i) {
+    //   gl.enableVertexAttribArray(this.transformAttrib + i);
+    //   gl.vertexAttribPointer(transformAttrib + i, 4, gl.FLOAT, false, 64, 0);
+    //   (gl as any).vertexAttribDivisor(transformAttrib + i, 1);
+    // }
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.uniform3fv(cursorUniform, cursorPosition);
@@ -148,15 +152,16 @@ let vertexSource = `
   uniform vec3 cursor;
   uniform mat4 view;
   attribute vec3 position;
-  attribute mat4 transform;
+  attribute vec2 transform;
   varying vec3 vCursorDiff;
   varying vec3 vNormal;
   void main(void) {
     vec4 pos = vec4(position, 1.0);
     // pos = transform * pos;
     // pos = vec4(position, 1.0);
-    pos.x = pos.x + transform[3].x;
-    pos.y = pos.y + transform[0].y;
+    pos.xy = pos.xy + transform;
+    // pos.x = pos.x + transform[3].x;
+    // pos.y = pos.y + transform[0].y;
     vCursorDiff = cursor - pos.xyz;
     gl_Position = view * pos;
     // gl_Position = gl_Position * vec4(0.8, 1.0, 1.0, 1.0);
