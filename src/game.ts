@@ -135,7 +135,7 @@ let fragmentSource = `
   varying vec3 vNormal;
   void main(void) {
     vec3 rgb = vec3(0.1, 0.6, 0.4);
-    vec3 light = normalize(vec3(-1, 1, 1));
+    vec3 light = normalize(vec3(-1, 1, 0.7));
     float scale = 0.5 * (dot(vNormal, light) + 1.0);
     scale = 0.8 * scale + 0.2;
     rgb = rgb * scale;
