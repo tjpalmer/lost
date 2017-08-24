@@ -20,8 +20,16 @@ export function makeIdentity<Tensor extends NumberArray>(): NumberArray {
   return result;
 }
 
+export function scale<Tensor extends NumberArray>(a: Tensor, v: Tensor) {
+  a[0] *= v[0];
+  a[5] *= v[1];
+  a[10] *= v[2];
+  return a;
+}
+
 export function translate<Tensor extends NumberArray>(a: Tensor, v: Tensor) {
   a[12] += v[0];
   a[13] += v[1];
   a[14] += v[2];
+  return a;
 }

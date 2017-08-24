@@ -1,4 +1,4 @@
-import {makeArc, makeIdentity, translate} from './all';
+import {makeArc, makeIdentity, scale, translate} from './all';
 
 export class World {
 
@@ -30,6 +30,6 @@ export class World {
 
 export class Bug {
 
-  transform = makeIdentity();
+  transform = scale(makeIdentity(), [0.8, 1, 1]);
 
 }
