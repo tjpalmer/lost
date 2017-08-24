@@ -25,7 +25,7 @@ export class World {
     return [transforms, 2 * bugs.length];
   }
 
-  shellPositions = makeArc(20, -1, 1, -0.2, -0.5);
+  shellPositions = makeArc(20, -1, 1, 0.2, 0.5);
 
 }
 

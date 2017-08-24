@@ -1,4 +1,4 @@
-import {World} from './all';
+import {World, makeIdentity} from './all';
 
 export class Game {
 
@@ -39,16 +39,18 @@ export class Game {
     this.resize();
     // Mouse, also after drawing is ready.
     let cursor = document.getElementsByTagName('svg')[0];
+    let {height: cursorHeight, width: cursorWidth} =
+      cursor.getBoundingClientRect();
     addEventListener('mousemove', event => {
       let {style} = cursor;
       let {clientX: x, clientY: y} = event;
       let {cursorPosition, view} = this;
-      style.left = `${x - cursor.clientWidth / 2}px`;
-      style.top = `${y - cursor.clientHeight / 2}px`;
+      style.left = `${x - cursorWidth / 2}px`;
+      style.top = `${y - cursorHeight / 2}px`;
       let [height, width] = [innerHeight, innerWidth];
       x = (2 * (x / width) - 1) / view[0];
-      y = (-2 * (y / height) + 1) / view[10];
-      cursorPosition.set([x, y, -1.0]);
+      y = (-2 * (y / height) + 1) / view[5];
+      cursorPosition.set([x, y, 1.3]);
       this.draw();
     });
   }
@@ -108,7 +110,8 @@ export class Game {
     canvas.height = height;
     canvas.width = width;
     view[0] = scale * height / width;
-    view[5] = view[10] = scale;
+    view[5] = scale;
+    view[10] = -scale;
     this.draw();
   }
 
@@ -118,12 +121,7 @@ export class Game {
 
   transformBuffer: WebGLBuffer;
 
-  view = new Float32Array([
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1,
-  ]);
+  view = makeIdentity();
 
   viewUniform: WebGLUniformLocation;
 
@@ -137,11 +135,11 @@ let fragmentSource = `
   varying vec3 vNormal;
   void main(void) {
     vec3 rgb = vec3(0.1, 0.6, 0.4);
-    vec3 light = normalize(vec3(-1.0, 1.0, -1.0));
+    vec3 light = normalize(vec3(-1, 1, 1));
     float scale = 0.5 * (dot(vNormal, light) + 1.0);
     scale = 0.8 * scale + 0.2;
     rgb = rgb * scale;
-    scale = 0.5 * (dot(vNormal, normalize(vCursorDiff)) + 1.0);
+    scale = 0.4 * (dot(vNormal, normalize(vCursorDiff)) + 1.0);
     scale = scale / pow(length(vCursorDiff), 0.1);
     rgb.x = rgb.x + scale;
     gl_FragColor = vec4(rgb, 1.0);
