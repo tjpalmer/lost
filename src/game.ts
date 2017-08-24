@@ -33,11 +33,7 @@ export class Game {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.world.shellPositions, gl.STATIC_DRAW);
     // Transform.
-    let transformBuffer = this.transformBuffer = gl.createBuffer()!;
-    gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
-    gl.bufferData(
-      gl.ARRAY_BUFFER, this.world.makeTransforms(), gl.STATIC_DRAW,
-    );
+    this.transformBuffer = gl.createBuffer()!;
     // Resize after drawing things are in place.
     addEventListener('resize', this.resize);
     this.resize();
@@ -52,7 +48,7 @@ export class Game {
       let [height, width] = [innerHeight, innerWidth];
       x = (2 * (x / width) - 1) / view[0];
       y = (-2 * (y / height) + 1) / view[10];
-      cursorPosition.set([x, y, 1.0]);
+      cursorPosition.set([x, y, -1.0]);
       this.draw();
     });
   }
@@ -70,19 +66,23 @@ export class Game {
     } = this;
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // Transforms.
     gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
+    let [transforms, count] = this.world.makeTransforms();
+    gl.bufferData(gl.ARRAY_BUFFER, transforms, gl.STATIC_DRAW);
     for (let i = 0; i < 4; ++i) {
       gl.vertexAttribPointer(
         transformAttribs[i], 4, gl.FLOAT, false, 64, 16 * i
       );
       (gl as any).vertexAttribDivisor(transformAttribs[i], 1);
     }
+    // Positions.
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.uniform3fv(cursorUniform, cursorPosition);
     gl.uniformMatrix4fv(viewUniform, false, view);
     (gl as any).drawArraysInstanced(
-      gl.TRIANGLES, 0, this.world.shellPositions.length / 3, 2,
+      gl.TRIANGLES, 0, this.world.shellPositions.length / 3, count,
     );
   }
 
@@ -137,7 +137,7 @@ let fragmentSource = `
   varying vec3 vNormal;
   void main(void) {
     vec3 rgb = vec3(0.1, 0.6, 0.4);
-    vec3 light = normalize(vec3(-1.0, 1.0, 1.0));
+    vec3 light = normalize(vec3(-1.0, 1.0, -1.0));
     float scale = 0.5 * (dot(vNormal, light) + 1.0);
     scale = 0.8 * scale + 0.2;
     rgb = rgb * scale;
@@ -164,6 +164,8 @@ let vertexSource = `
     vCursorDiff = cursor - pos.xyz;
     gl_Position = view * pos;
     // gl_Position = gl_Position * vec4(0.8, 1.0, 1.0, 1.0);
-    vNormal = normalize(position);
+    // Shape and rotate normals, but don't translate them.
+    vNormal = normalize(pos.xyz - transform3.xyz);
+    // vNormal = normalize(position);
   }
 `;

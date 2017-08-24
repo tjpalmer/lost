@@ -5,31 +5,34 @@ export class World {
   constructor() {
     let {bugs} = this;
     let bug = new Bug();
-    console.log(bug.transform);
-    translate(bug.transform, [-7, -3, 0]);
-    console.log(bug.transform);
+    // scale(bug.body, [1.2, 1.2, 1.2]);
+    translate(bug.body, [-7, -3, 0]);
+    translate(bug.head, [-7, -3, 0]);
     bugs.push(bug);
     bugs.push(new Bug());
   }
 
   bugs = new Array<Bug>();
 
-  makeTransforms() {
+  makeTransforms(): [Float32Array, number] {
     let {bugs} = this;
     // TODO Less memory allocation!
-    let transforms = new Float32Array(bugs.length * 16);
+    let transforms = new Float32Array(2 * bugs.length * 16);
     bugs.forEach((bug, index) => {
-      transforms.set(bug.transform, index * 16);
+      transforms.set(bug.body, 2 * index * 16);
+      transforms.set(bug.head, (2 * index + 1) * 16);
     });
-    return transforms;
+    return [transforms, 2 * bugs.length];
   }
 
-  shellPositions = makeArc(20, -1, 1, 0.2, 0.5);
+  shellPositions = makeArc(20, -1, 1, -0.2, -0.5);
 
 }
 
 export class Bug {
 
-  transform = scale(makeIdentity(), [0.8, 1, 1]);
+  body = scale(makeIdentity(), [0.8, 1, 1]);
+
+  head = translate(scale(makeIdentity(), [0.6, 0.4, 1]), [0, 0.7, 0]);
 
 }
