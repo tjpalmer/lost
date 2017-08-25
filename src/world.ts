@@ -1,5 +1,6 @@
 import {
-  NumberArray, dot4, makeArc, makeIdentity, scale, scale1, translate,
+  NumberArray, dot, dot4, makeArc, makeIdentity, normalize, scale, scale1, sub,
+  translate,
 } from './all';
 
 export class World {
@@ -7,14 +8,20 @@ export class World {
   constructor() {
     let {bugs} = this;
     let bug = new Bug();
-    scale1(translate(bug.local, [-7, 3]), 1.1);
+    translate(bug.local, [-7, 3]);
+    // We need the idea of a kid transform separate from world transform.
+    // scale1(bug.local, 1.1);
+    // console.log(bug.local);
     bugs.push(bug);
     bugs.push(new Bug());
   }
 
   bugs = new Array<Bug>();
 
+  cursor = new Float32Array(3);
+
   makeTransforms(): [Float32Array, number] {
+    this.update();
     let {bugs} = this;
     // TODO Less memory allocation!
     let count = 0;
@@ -34,6 +41,28 @@ export class World {
 
   shellPositions = makeArc(20, -1, 1, 0.2, 0.5);
 
+  update() {
+    let {bugs, cursor} = this;
+    let forwardLocal = [1, 0, 0, 1];
+    let forward = new Float32Array(4);
+    let angle = new Float32Array(1);
+    let diff = cursor.slice();
+    for (let bug of bugs) {
+      let {local} = bug;
+      let pos = local.subarray(12);
+      diff.set(cursor);
+      sub(diff, pos)
+      forward.set(forwardLocal);
+      dot4(bug.local, forwardLocal, forward);
+      sub(forward, pos);
+      dot(
+        1, normalize(forward.subarray(0, 2)), normalize(diff.subarray(0, 2)),
+        angle,
+      );
+      // console.log(angle[0]);
+    }
+  }
+
 }
 
 export class Part {
@@ -46,6 +75,8 @@ export class Part {
 
   global = makeIdentity();
 
+  // TODO kid transform
+
   kids = [] as Array<Part>;
 
   local = makeIdentity();
@@ -54,9 +85,9 @@ export class Part {
 
 export class Bug extends Part {
 
-  body = new Part(local => scale(local, [0.8, 1, 1]));
+  body = new Part(local => scale(local, [1, 0.8, 1]));
 
-  head = new Part(local => translate(scale(local, [0.6, 0.4, 1]), [0, 0.7, 0]));
+  head = new Part(local => translate(scale(local, [0.4, 0.6, 1]), [0.7, 0, 0]));
 
   kids = [this.body, this.head];
 

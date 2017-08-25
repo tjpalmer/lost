@@ -44,7 +44,8 @@ export class Game {
     addEventListener('mousemove', event => {
       let {style} = cursor;
       let {clientX: x, clientY: y} = event;
-      let {cursorPosition, view} = this;
+      let {view, world} = this;
+      let {cursor: cursorPosition} = world;
       style.left = `${x - cursorWidth / 2}px`;
       style.top = `${y - cursorHeight / 2}px`;
       let [height, width] = [innerHeight, innerWidth];
@@ -57,15 +58,14 @@ export class Game {
 
   canvas: HTMLCanvasElement;
 
-  cursorPosition = new Float32Array(3);
-
   cursorUniform: WebGLUniformLocation;
 
   draw() {
     let {
-      canvas, cursorPosition, cursorUniform, gl, positionAttrib, positionBuffer,
+      canvas, cursorUniform, gl, positionAttrib, positionBuffer,
       transformAttribs, transformBuffer, view, viewUniform, world,
     } = this;
+    let {cursor: cursorPosition} = world;
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     // Transforms.
