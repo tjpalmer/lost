@@ -1,13 +1,13 @@
-import {makeArc, makeIdentity, scale, translate} from './all';
+import {
+  NumberArray, dot4, makeArc, makeIdentity, scale, scale1, translate,
+} from './all';
 
 export class World {
 
   constructor() {
     let {bugs} = this;
     let bug = new Bug();
-    // scale(bug.body, [1.2, 1.2, 1.2]);
-    translate(bug.body, [-7, -3, 0]);
-    translate(bug.head, [-7, -3, 0]);
+    scale1(translate(bug.local, [-7, 3]), 1.1);
     bugs.push(bug);
     bugs.push(new Bug());
   }
@@ -17,22 +17,47 @@ export class World {
   makeTransforms(): [Float32Array, number] {
     let {bugs} = this;
     // TODO Less memory allocation!
-    let transforms = new Float32Array(2 * bugs.length * 16);
-    bugs.forEach((bug, index) => {
-      transforms.set(bug.body, 2 * index * 16);
-      transforms.set(bug.head, (2 * index + 1) * 16);
-    });
-    return [transforms, 2 * bugs.length];
+    let count = 0;
+    for (let bug of bugs) {
+      count += bug.kids.length;
+    }
+    let transforms = new Float32Array(count * 16);
+    count = 0;
+    for (let bug of bugs) {
+      for (let kid of bug.kids) {
+        dot4(bug.local, kid.local, kid.global);
+        transforms.set(kid.global, count++ * 16);
+      }
+    }
+    return [transforms, count];
   }
 
   shellPositions = makeArc(20, -1, 1, 0.2, 0.5);
 
 }
 
-export class Bug {
+export class Part {
 
-  body = scale(makeIdentity(), [0.8, 1, 1]);
+  constructor(init?: (local: NumberArray) => void) {
+    if (init) {
+      init(this.local);
+    }
+  }
 
-  head = translate(scale(makeIdentity(), [0.6, 0.4, 1]), [0, 0.7, 0]);
+  global = makeIdentity();
+
+  kids = [] as Array<Part>;
+
+  local = makeIdentity();
+
+}
+
+export class Bug extends Part {
+
+  body = new Part(local => scale(local, [0.8, 1, 1]));
+
+  head = new Part(local => translate(scale(local, [0.6, 0.4, 1]), [0, 0.7, 0]));
+
+  kids = [this.body, this.head];
 
 }
