@@ -1,5 +1,17 @@
 export type NumberArray = Array<number> | Float32Array;
-const {PI, cos, sin, sqrt} = Math;
+const {PI, atan2, cos, sin, sqrt} = Math;
+
+export function angle2(v1: NumberArray, v2: NumberArray) {
+  let a1 = atan2(v1[1], v1[0]);
+  let a2 = atan2(v2[1], v2[0]);
+  let result = ((a1 - a2) / PI) % 2;
+  if (result > 1) {
+    result -= 2;
+  } else if (result < -1) {
+    result += 2;
+  }
+  return result;
+}
 
 export function dot<Tensor extends NumberArray>(
   nrows: number, a: Tensor, b: NumberArray, result?: Tensor
@@ -73,9 +85,9 @@ export function scale<Tensor extends NumberArray>(a: Tensor, v: NumberArray) {
 }
 
 export function scale1<Tensor extends NumberArray>(a: Tensor, x: number) {
-  a[0] *= x;
-  a[5] *= x;
-  a[10] *= x;
+  for (let i = 0; i < a.length; ++i) {
+    a[i] *= x;
+  }
   return a;
 }
 

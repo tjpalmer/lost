@@ -1,19 +1,24 @@
 import {
-  NumberArray, dot, dot4, makeArc, makeIdentity, normalize, rotationZ, scale,
-  scale1, sub, translate,
+  NumberArray, angle2, dot, dot4, makeArc, makeIdentity, normalize, rotationZ,
+  scale, scale1, sub, translate,
 } from './all';
+const {abs, min, random, sign} = Math;
 
 export class World {
 
   constructor() {
     let {bugs} = this;
-    let bug = new Bug();
-    translate(bug.local, [-7, 3]);
-    // We need the idea of a kid transform separate from world transform.
-    // scale1(bug.local, 1.1);
-    // console.log(bug.local);
-    bugs.push(bug);
-    bugs.push(new Bug());
+    let range = 40;
+    for (let i = 0; i < 100; ++i) {
+      let bug = new Bug();
+      translate(
+        bug.local, [2 * range * (random() - 0.5), range * (random() - 0.5)],
+      );
+      // We need the idea of a kid transform separate from world transform.
+      // scale1(bug.local, 1.1);
+      // console.log(bug.local);
+      bugs.push(bug);
+    }
   }
 
   bugs = new Array<Bug>();
@@ -46,25 +51,25 @@ export class World {
 
   update() {
     let {bugs, cursor} = this;
-    let forwardLocal = [1, 0, 0, 1];
-    let forward = new Float32Array(4);
-    let angle = new Float32Array(1);
-    let diff = cursor.slice();
+    let forward = vec4a;
+    let diff = vec3a;
+    diff.set(cursor);
     for (let bug of bugs) {
       let {local} = bug;
       let pos = local.subarray(12);
       diff.set(cursor);
-      sub(diff, pos)
+      sub(diff, pos);
       forward.set(forwardLocal);
       dot4(bug.local, forwardLocal, forward);
       sub(forward, pos);
-      dot(
-        1, normalize(forward.subarray(0, 2)), normalize(diff.subarray(0, 2)),
-        angle,
-      );
-      // console.log(angle[0]);
-      dot4(bug.local, rotationZ(0.01, work1), work2);
+      let angle = -angle2(forward, diff);
+      angle = sign(angle) * min(0.1 * abs(angle), abs(angle));
+      // angle += random() * 0.01;
+      dot4(bug.local, rotationZ(angle, work1), work2);
       bug.local.set(work2);
+      // Need some collision detection to avoid this too much.
+      // scale1(forward, 0.1);
+      // translate(bug.local, forward);
     }
   }
 
@@ -100,5 +105,11 @@ export class Bug extends Part {
 
 let work1 = makeIdentity();
 let work2 = makeIdentity();
+
+let forwardLocal = new Float32Array([1, 0, 0, 1]);
+
+let vec3a = new Float32Array(3);
+let vec3b = new Float32Array(3);
+let vec4a = new Float32Array(4);
 
 let transforms = new Float32Array(0);
