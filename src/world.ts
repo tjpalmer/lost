@@ -1,6 +1,6 @@
 import {
-  NumberArray, dot, dot4, makeArc, makeIdentity, normalize, scale, scale1, sub,
-  translate,
+  NumberArray, dot, dot4, makeArc, makeIdentity, normalize, rotationZ, scale,
+  scale1, sub, translate,
 } from './all';
 
 export class World {
@@ -28,7 +28,10 @@ export class World {
     for (let bug of bugs) {
       count += bug.kids.length;
     }
-    let transforms = new Float32Array(count * 16);
+    let size = count * 16;
+    if (transforms.length < size) {
+      transforms = new Float32Array(size * 1.25);
+    }
     count = 0;
     for (let bug of bugs) {
       for (let kid of bug.kids) {
@@ -60,6 +63,8 @@ export class World {
         angle,
       );
       // console.log(angle[0]);
+      dot4(bug.local, rotationZ(0.01, work1), work2);
+      bug.local.set(work2);
     }
   }
 
@@ -92,3 +97,8 @@ export class Bug extends Part {
   kids = [this.body, this.head];
 
 }
+
+let work1 = makeIdentity();
+let work2 = makeIdentity();
+
+let transforms = new Float32Array(0);

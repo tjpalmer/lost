@@ -46,14 +46,14 @@ export class Game {
       let {clientX: x, clientY: y} = event;
       let {view, world} = this;
       let {cursor: cursorPosition} = world;
-      style.left = `${x - cursorWidth / 2}px`;
-      style.top = `${y - cursorHeight / 2}px`;
+      // style.left = `${x - cursorWidth / 2}px`;
+      // style.top = `${y - cursorHeight / 2}px`;
       let [height, width] = [innerHeight, innerWidth];
       x = (2 * (x / width) - 1) / view[0];
       y = (-2 * (y / height) + 1) / view[5];
       cursorPosition.set([x, y, 1.3]);
-      this.draw();
     });
+    this.step();
   }
 
   canvas: HTMLCanvasElement;
@@ -71,7 +71,7 @@ export class Game {
     // Transforms.
     gl.bindBuffer(gl.ARRAY_BUFFER, transformBuffer);
     let [transforms, count] = this.world.makeTransforms();
-    gl.bufferData(gl.ARRAY_BUFFER, transforms, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, transforms, gl.DYNAMIC_DRAW);
     for (let i = 0; i < 4; ++i) {
       gl.vertexAttribPointer(
         transformAttribs[i], 4, gl.FLOAT, false, 64, 16 * i
@@ -104,6 +104,11 @@ export class Game {
 
   positionBuffer: WebGLBuffer;
 
+  step = () => {
+    window.requestAnimationFrame(this.step);
+    this.draw();
+  }
+
   resize = () => {
     let {canvas, scale, view} = this;
     let [height, width] = [innerHeight, innerWidth];
@@ -112,7 +117,6 @@ export class Game {
     view[0] = scale * height / width;
     view[5] = scale;
     view[10] = -scale;
-    this.draw();
   }
 
   scale = 0.05;
