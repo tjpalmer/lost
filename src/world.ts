@@ -103,6 +103,12 @@ export class Bug extends Part {
 
 }
 
+export class Shell extends Part {
+
+  
+
+}
+
 let work1 = makeIdentity();
 let work2 = makeIdentity();
 
